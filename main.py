@@ -1,21 +1,28 @@
 import websocket
 import json
 import pandas as pandas
+import logging
 
-endpoint = 'wss://stream.binance.com:9443/ws'
+logging.basicConfig(
+    format="%(message)s",
+    level=logging.DEBUG,
+)
+
+binance_endpoint = 'wss://fstream.binance.com/ws'
 
 our_msg = json.dumps(
-  {'method':'SUBSCRIBE',
-  'params':['btcusd@ticker'], 'id':1})
+  {"method":"SUBSCRIBE",
+  "params":["btcusdt@trade"], "id":1})
 
 def on_open(ws):
+  print(our_msg)
   ws.send(our_msg)
 
 def on_message(ws, message):
   out = json.loads(message)
   print(out)
 
-ws = websocket.WebSocketApp(endpoint, 
+ws = websocket.WebSocketApp(binance_endpoint, 
                             on_message=on_message,
                             on_open=on_open
                             )
