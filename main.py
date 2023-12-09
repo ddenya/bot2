@@ -20,6 +20,7 @@ def on_open(ws):
 
 def on_message(ws, message):
   out = json.loads(message)
+  out = pandas.DataFrame({'price': float(out['p'])}, index=[pandas.to_datetime(out['E'],unit='ms')])
   print(out)
 
 ws = websocket.WebSocketApp(binance_endpoint, 
