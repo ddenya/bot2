@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <curl/curl.h>
 #include <cjson/cJSON.h> // cJSON library for JSON parsing
-
+#include "getprices/binance.h"  // Include binance.h from the getprices folder
+#include "getprices/coinbase.h" // Include coinbase.h from the getprices folder
 
 // gcc bot_in_c.c -o cbot -lcjson -lcurl
 // gcc -o cbot bot_in_c.c ./getprices/binance.c ./getprices/coinbase.c -I./getprices -I/usr/local/Cellar/cjson/1.7.15/include/cjson  -lcurl -lcjson
@@ -18,7 +19,6 @@ const char* BINANCE_API = "https://api.binance.com/api/v3/ticker/price?symbol=BT
 
 // Coinbase API endpoint for BTC-USD pair
 const char* COINBASE_API = "https://api.coinbase.com/v2/prices/BTC-USD/spot";
-
 
 
 // Function to execute a buy trade on Binance
@@ -53,8 +53,8 @@ int main() {
     
     while (1) {
         // Get market data from Binance and Coinbase
-        priceBinance = getExchangePrice(BINANCE_API, "price");
-        priceCoinbase = getExchangePrice(COINBASE_API, "data.amount");
+        priceBinance = getBinancePrice(BINANCE_API);
+        priceCoinbase = getCoinbasePrice(COINBASE_API);
 
         printf("BinancePrice: %lf \n", priceBinance);
         printf("CoinbasePrice: %lf \n", priceCoinbase);
@@ -72,7 +72,7 @@ int main() {
             printf("No arbitrage opportunity at the moment.\n");
         }
 
-        sleep(5); // Arbitrage check every 5 seconds
+        sleep(1); // Arbitrage check every 5 seconds
     }
 
     return 0;
