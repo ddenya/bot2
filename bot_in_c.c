@@ -117,12 +117,69 @@ void executeTrade(const char* pair, double amount, const char* buyExchange, cons
     }
 }
 
+#define MAX_SIZE 100
+
+struct KeyValuePair {
+    char key[20];
+    double value;
+};
+
+void addToDictionary(struct KeyValuePair dict[], int *size, const char *key, double value) {
+    if (*size >= MAX_SIZE) {
+        printf("Dictionary is full.\n");
+        return;
+    }
+
+    strcpy(dict[*size].key, key);
+    dict[*size].value = value;
+    (*size)++;
+}
+
+double getValue(struct KeyValuePair dict[], int size, const char *key) {
+    for (int i = 0; i < size; ++i) {
+        if (strcmp(dict[i].key, key) == 0) {
+            return dict[i].value;
+        }
+    }
+    return -1.0; // Return -1 if key is not found
+}
+
+
+void printTableLine(int sectionLengths[], int numSections) {
+    int totalLength = 0;
+    for (int i = 0; i < numSections; ++i) {
+        totalLength += sectionLengths[i];
+    }
+
+    for (int i = 0; i < totalLength; ++i) {
+        printf("-");
+    }
+    printf("\n");
+}
+
+int double_len(double number) {
+    return snprintf(NULL, 0, "%f", number);
+}
+
+
 
 int main() {
 
     const char* cryptoPair = "BTC-USD";
     double priceBinance, priceCoinbase;
-    double amount = 1.0;
+    double amount_btc = 0.005;
+    struct KeyValuePair dictionary[MAX_SIZE];
+    int dictSize = 0;
+
+    addToDictionary(dictionary, &dictSize, "BTCUSDT", 0.0005);
+    addToDictionary(dictionary, &dictSize, "ETHUSD", 0.5);
+    addToDictionary(dictionary, &dictSize, "BNBUSDT", 0.0);
+    addToDictionary(dictionary, &dictSize, "SOLUSDT", 0.0);
+
+    printf("BTCUSDT => %.4f\n", getValue(dictionary, dictSize, "BTCUSDT"));
+    printf("ETHUSD => %.1f\n", getValue(dictionary, dictSize, "ETHUSD"));
+    printf("BNBUSDT => %.1f\n", getValue(dictionary, dictSize, "BNBUSDT"));
+    printf("SOLUSDT => %.1f\n", getValue(dictionary, dictSize, "SOLUSDT"));
 
     const char* symbols[] = {
         "BTCUSDT", "ETHUSD", "BNBUSDT", "SOLUSDT"
@@ -130,8 +187,8 @@ int main() {
     
     while (1) {
 
-    printf("| %-8s | %-15s | %-15s | %-15s | %-15s | %-8s | \n", "Symbol", "Binance Price", "Coinbase Price","Diff B-C", "Diff C-B", "");
-    printf("|----------|-----------------|-----------------|-----------------|-----------------|-----------|\n");
+    printf("| %-8s | %-15s | %-15s | %-15s | %-15s | %-8s |  %-8s |%-8s|\n", "Symbol", "Binance Price", "Coinbase Price","Diff B-C", "Diff C-B", "", "Amt", "Amt * Diff");
+    printf("|----------|-----------------|-----------------|-----------------|-----------------|----------|-----------|----------|\n");
 
     for (int i = 0; i < sizeof(symbols) / sizeof(symbols[0]); ++i) {
         char** urls = constructURLs(symbols[i]);
@@ -139,16 +196,27 @@ int main() {
         //printf("%s : %s : %s \n ", symbols[i], urls[0], urls[1]);
         double priceBinance = getBinancePrice(urls[0]);
         double priceCoinbase = getCoinbasePrice(urls[1]);
-        double diffB_C = priceBinance - priceCoinbase;
-        double diffC_B = priceCoinbase - priceBinance;
-        char flag[7];
+        double diffB_C = priceBinance - priceCoinbase; // +0 - binance > coinbase -0 coinbase > binance
+        double diffC_B = priceCoinbase - priceBinance; // +0 - coinbase > binance -0 binance > coinbase
+        double amount = getValue(dictionary, dictSize, symbols[i]);
+        //printf("amount: %lf", amount);
+        
+        
+        char flag[12];    
         flag[0] = '\0';
         double limit = 0.5;
-        if ((diffB_C > limit )|| (diffC_B > limit) ) {
-            strcat(flag, "+++");
+        double amt_diff = 0.0;
+        if ((diffB_C > limit ) ) {
+            strcat(flag, "c->b");
+            amt_diff = amount * diffB_C;
+
+        }
+        else if (diffC_B > limit){
+            strcat(flag, "b->c");
+            amt_diff = amount * diffC_B;
         }
 
-        printf("| %-8s | %-15.2lf | %-15.2lf | %-15.2lf | %-15.2lf | %-8s | \n", symbols[i], priceBinance, priceCoinbase, diffB_C, diffC_B, flag);
+        printf("| %-8s | %-15.2lf | %-15.2lf | %-15.2lf | %-15.2lf | %-8s | %-8.8lf|%-8.8lf| \n", symbols[i], priceBinance, priceCoinbase, diffB_C, diffC_B, flag, amount, amt_diff);
         freeURLs(urls);
         }
         else{
@@ -157,7 +225,7 @@ int main() {
 
     }
 
-    printf("|----------|-----------------|-----------------|-----------------|-----------------|-----------|\n");
+    printf("|----------|-----------------|-----------------|-----------------|-----------------|----------|-----------|----------|\n");
 
 
        // double profit = priceBinance - priceCoinbase;
