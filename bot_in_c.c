@@ -7,7 +7,6 @@
 #include "getprices/binance.h"  // Include binance.h from the getprices folder
 #include "getprices/coinbase.h" // Include coinbase.h from the getprices folder
 
-
 // gcc bot_in_c.c -o cbot -lcjson -lcurl
 // gcc -o cbot bot_in_c.c ./getprices/binance.c ./getprices/coinbase.c -I./getprices -I/usr/local/Cellar/cjson/1.7.15/include/cjson  -lcurl -lcjson
 
@@ -26,10 +25,8 @@ char** constructURLs(const char* symbol) {
         printf("Memory allocation failed\n");
         exit(1);
     }
-
     char* binanceURL = NULL;
     char* coinbaseURL = NULL;
-
     if (strcmp(symbol, "ETHUSD") == 0) {
         binanceURL = malloc(strlen(BINANCE_BASE_URL) + strlen("ETHUSDT") + 1);
         if (binanceURL == NULL) {
@@ -38,7 +35,6 @@ char** constructURLs(const char* symbol) {
             exit(1);
         }
         sprintf(binanceURL, "%sETHUSDT", BINANCE_BASE_URL);
-
         coinbaseURL = malloc(strlen(COINBASE_BASE_URL) + strlen("ETH-USD") + 7);
         if (coinbaseURL == NULL) {
             printf("Memory allocation failed\n");
@@ -117,7 +113,7 @@ void executeTrade(const char* pair, double amount, const char* buyExchange, cons
     }
 }
 
-#define MAX_SIZE 100
+#define DICT_SIZE 2
 
 struct KeyValuePair {
     char key[20];
@@ -125,7 +121,7 @@ struct KeyValuePair {
 };
 
 void addToDictionary(struct KeyValuePair dict[], int *size, const char *key, double value) {
-    if (*size >= MAX_SIZE) {
+    if (*size >= DICT_SIZE) {
         printf("Dictionary is full.\n");
         return;
     }
@@ -157,91 +153,157 @@ void printTableLine(int sectionLengths[], int numSections) {
     printf("\n");
 }
 
+// lenght of double in decimals
 int double_len(double number) {
     return snprintf(NULL, 0, "%f", number);
 }
 
-
+int dict_size(struct KeyValuePair* array) {
+    int count = 0;
+    while (array[count].key != NULL) {
+        count++;
+    }
+    return count;
+}
+// also for array
+int array_size(const char* array[]) {
+    int count = 0;
+    while (array[count] != NULL) {
+        count++;
+    }
+    return count;
+}
 
 int main() {
-
-    const char* cryptoPair = "BTC-USD";
     double priceBinance, priceCoinbase;
-    double amount_btc = 0.005;
-    struct KeyValuePair dictionary[MAX_SIZE];
-    int dictSize = 0;
+    int dict_size_counter = 0;
+    struct KeyValuePair dictionary[DICT_SIZE];
+    double total = 0.0;
+    double gain = 0.0;
 
-    addToDictionary(dictionary, &dictSize, "BTCUSDT", 0.0005);
-    addToDictionary(dictionary, &dictSize, "ETHUSD", 0.5);
-    addToDictionary(dictionary, &dictSize, "BNBUSDT", 0.0);
-    addToDictionary(dictionary, &dictSize, "SOLUSDT", 0.0);
 
-    printf("BTCUSDT => %.4f\n", getValue(dictionary, dictSize, "BTCUSDT"));
-    printf("ETHUSD => %.1f\n", getValue(dictionary, dictSize, "ETHUSD"));
-    printf("BNBUSDT => %.1f\n", getValue(dictionary, dictSize, "BNBUSDT"));
-    printf("SOLUSDT => %.1f\n", getValue(dictionary, dictSize, "SOLUSDT"));
+    /*
+    BTCUSD - Bitcoin to US Dollar
+    ETHUSD - Ethereum to US Dollar
+    LTCUSD - Litecoin to US Dollar
+    BCHUSD - Bitcoin Cash to US Dollar
+    ADAUSD - Cardano to US Dollar
+    XRPUSD - Ripple to US Dollar
+    DOTUSD - Polkadot to US Dollar
+    UNIUSD - Uniswap to US Dollar
+    SOLUSD - Solana to US Dollar */
 
     const char* symbols[] = {
-        "BTCUSDT", "ETHUSD", "BNBUSDT", "SOLUSDT"
+    "BTCUSDT",
+    "ETHUSDT",
+    //"LTCUSDT",
+    //"BCHUSDT",
+    //"ADAUSDT",
+    //"XRPUSDT",
+    //"DOTUSDT",
+    //"UNIUSDT",
+    //"SOLUSDT"
     };
+
+    const double amounts[] = {
+        0.05, // BTCUSD
+        2, // ETHUSD
+        //1, // LTCUSD
+        //1, // BCHUSD
+        //1, // ADAUSD
+        //1, // XRPUSD
+        //1, // DOTUSD
+        //1, // UNIUSD
+        //1 //SOLUSD
+    };
+
+    for (int i = 0; i < array_size(symbols); i++){
+        addToDictionary(dictionary, &dict_size_counter, symbols[i], amounts[i]);
+    }
+    for (int i = 0; i < array_size(symbols); i++){
+        printf("%s => %.4f\n", symbols[i], getValue(dictionary, dict_size_counter, symbols[i]));
+    }
+
+    /*
+    addToDictionary(dictionary, &dictSize, "BTCUSDT", 0.0005);
+    addToDictionary(dictionary, &dictSize, "ETHUSD", 0.5);
+    addToDictionary(dictionary, &dictSize, "LTCUSD", 0.0005);
+    addToDictionary(dictionary, &dictSize, "BCHUSD", 0.5);
+    addToDictionary(dictionary, &dictSize, "ADAUSD", 0.0);
+    addToDictionary(dictionary, &dictSize, "XRPUSD", 0.0);
+    addToDictionary(dictionary, &dictSize, "DOTUSD", 0.0);
+    addToDictionary(dictionary, &dictSize, "UNIUSD", 0.0);
+    addToDictionary(dictionary, &dictSize, "SOLUSD", 0.0);
+
+
+    printf("BTCUSDT => %.4f\n", getValue(dictionary, dictSize, "BTCUSDT"));
+    printf("BTCUSDT => %.4f\n", getValue(dictionary, dictSize, "ETHUSD"));
+    printf("ETHUSD => %.1f\n", getValue(dictionary, dictSize, "ETHUSD"));
+    printf("ETHUSD => %.1f\n", getValue(dictionary, dictSize, "ETHEUR"));
+    printf("BNBUSDT => %.1f\n", getValue(dictionary, dictSize, "BNBUSDT"));
+    printf("SOLUSDT => %.1f\n", getValue(dictionary, dictSize, "SOLUSDT"));
+    */
+
     
     while (1) {
-
     printf("| %-8s | %-15s | %-15s | %-15s | %-15s | %-8s |  %-8s |%-8s|\n", "Symbol", "Binance Price", "Coinbase Price","Diff B-C", "Diff C-B", "", "Amt", "Amt * Diff");
     printf("|----------|-----------------|-----------------|-----------------|-----------------|----------|-----------|----------|\n");
 
     for (int i = 0; i < sizeof(symbols) / sizeof(symbols[0]); ++i) {
         char** urls = constructURLs(symbols[i]);
-        if (urls != NULL) {
         //printf("%s : %s : %s \n ", symbols[i], urls[0], urls[1]);
-        double priceBinance = getBinancePrice(urls[0]);
-        double priceCoinbase = getCoinbasePrice(urls[1]);
-        double diffB_C = priceBinance - priceCoinbase; // +0 - binance > coinbase -0 coinbase > binance
-        double diffC_B = priceCoinbase - priceBinance; // +0 - coinbase > binance -0 binance > coinbase
-        double amount = getValue(dictionary, dictSize, symbols[i]);
-        //printf("amount: %lf", amount);
-        
-        
-        char flag[12];    
-        flag[0] = '\0';
-        double limit = 0.5;
-        double amt_diff = 0.0;
-        if ((diffB_C > limit ) ) {
-            strcat(flag, "c->b");
-            amt_diff = amount * diffB_C;
+        if (urls != NULL) {
+            double priceBinance = getBinancePrice(urls[0]);
+            double priceCoinbase = getCoinbasePrice(urls[1]);
+            double diffB_C = priceBinance - priceCoinbase; // +0 - binance > coinbase -0 coinbase > binance
+            double diffC_B = priceCoinbase - priceBinance; // +0 - coinbase > binance -0 binance > coinbase
+            double amount = getValue(dictionary, dict_size_counter, symbols[i]);
+            //printf("amount: %lf", amount);
+            char flag[12];    
+            flag[0] = '\0';
 
-        }
-        else if (diffC_B > limit){
-            strcat(flag, "b->c");
-            amt_diff = amount * diffC_B;
-        }
+            double overall_limit = 1;
+            double inner_limit = 0.5;
+            double amt_diff = 0.0;
 
-        printf("| %-8s | %-15.2lf | %-15.2lf | %-15.2lf | %-15.2lf | %-8s | %-8.8lf|%-8.8lf| \n", symbols[i], priceBinance, priceCoinbase, diffB_C, diffC_B, flag, amount, amt_diff);
-        freeURLs(urls);
+            if ((diffB_C > overall_limit ) ) {
+                amt_diff = amount * diffB_C;
+                if (amt_diff > inner_limit){
+                    strcat(flag, "c->b");
+                    total+=amt_diff;
+                    gain = amt_diff;
+                }
+
+            }
+            else if (diffC_B > overall_limit){
+                amt_diff = amount * diffC_B;
+                if (amt_diff > inner_limit){
+                    strcat(flag, "b->c");
+                    total+=amt_diff;
+                    gain = amt_diff;
+                }
+            }
+            printf("| %-8s | %-15.2lf | %-15.2lf | %-15.2lf | %-15.2lf | %-8s | %-8.8lf|%-8.8lf| \n", symbols[i], priceBinance, priceCoinbase, diffB_C, diffC_B, flag, amount, amt_diff);
+            freeURLs(urls);
         }
         else{
             printf("%s : %s : %s \n ", symbols[i], "null", "null");
         }
-
     }
-
     printf("|----------|-----------------|-----------------|-----------------|-----------------|----------|-----------|----------|\n");
-
+    printf("gain: %lf \n", gain);
+    printf("total: %lf \n", total);
 
        // double profit = priceBinance - priceCoinbase;
-
        // if (profit > 0) {
            // printf("Arbitrage opportunity found! Potential profit: %f\n", profit);
-
             // Execute the trade
             // executeTrade(cryptoPair, amount, "Binance", "Coinbase");
-
            // printf("Trade executed!\n");
        // } else {
          //  // printf("No arbitrage opportunity at the moment.\n");
       //  }
         sleep(1); // Arbitrage check every 5 seconds
     }
-
     return 0;
 }
