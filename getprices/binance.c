@@ -33,9 +33,9 @@ double getBinancePrice(const char* binanceAPI) {
             cJSON* root = cJSON_Parse(responseBuffer);
 
             if (root != NULL) {
-                char* jsonString = cJSON_Print(root);
-                printf("Parsed JSON: %s\n", jsonString);
-                free(jsonString); // Free the string when done
+                // char* jsonString = cJSON_Print(root);
+                // printf("Parsed JSON: %s\n", jsonString);
+                // free(jsonString); // Free the string when done
 
                 cJSON* priceJson = cJSON_GetObjectItemCaseSensitive(root, "price");
                 
@@ -46,7 +46,8 @@ double getBinancePrice(const char* binanceAPI) {
                         price = priceJson->valuedouble;
                     }
                 } else {
-                    fprintf(stderr, "Price field not found or invalid.\n");
+                    //fprintf(stderr, "N/A.\n");
+                    char price[] = "N/A";
                 }
 
                 cJSON_Delete(root);
